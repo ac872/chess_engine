@@ -5,6 +5,7 @@ import com.chess.pieces.*;
 import java.util.HashMap;
 import java.awt.Point;
 import java.util.LinkedList;
+import java.util.Objects;
 
 
 public class Board implements Moves{
@@ -142,22 +143,31 @@ public class Board implements Moves{
     }
 
     @Override
-    public boolean isValid(Point from, Point to) {
+    public boolean isValid(Point from, Point dest) {
 //        Check points are different
-        if (from.equals(to)) return false;
+        if (from.equals(dest)) return false;
 
-        Piece pieceOrigin = grid.get(from).getPiece();
+        Square squareOrigin = grid.get(from);
+        if (squareOrigin == null) {
+            throw new IllegalArgumentException();
+        }
+        Square squareDest = grid.get(dest);
+        if (squareDest == null) {
+            throw new IllegalArgumentException();
+        }
+
+        Piece pieceOrigin = Objects.requireNonNull(squareOrigin.getPiece());
         String pieceOriginName = pieceOrigin.getName().toLowerCase();
         pieceOriginName = pieceOriginName.replaceAll("\\s+","");
         Piece pieceDest = null;
 
 //        Return false if the pieces are the same colour, true if different colour or empty.
         try {
-            pieceDest = grid.get(to).getPiece();
+            pieceDest = squareDest.getPiece();
             if (pieceOrigin.getColor() == pieceDest.getColor()) return false;
-        } catch (NullPointerException ignored){}
+        } catch (NullPointerException ignored){}  // Null point for pieceDest means no piece in Square
         LinkedList<Point> possibleDirections = pieceOrigin.validMoves();
-        Point direction = new Point((to.x - from.x), (to.y - from.y));
+        Point direction = new Point((dest.x - from.x), (dest.y - from.y));
 
         switch (pieceOriginName) {
             case "n":
@@ -166,16 +176,29 @@ public class Board implements Moves{
                 King king = (King) pieceOrigin;
                 if (Math.abs(direction.x) > 1 || Math.abs(direction.y) > 1) return false;
 //                Checkmate Check Here??
+                king.isCheckMate(dest);
             case "p":
-                if (grid.get(to).isFilled() && Math.abs(direction.x) != 1) return false;
-                if (!possibleDirections.contains(direction)) return false;
+//                Find magnitude of the direction of travel
+                int xDir = Math.abs(direction.x);
+                int yDir = Math.abs(direction.y);
+
+//                Pawn is blocked from moving forwards
                 Pawn pawn = (Pawn) pieceOrigin;
-                pawn.setFirstMove(false);
-//                if (Math.abs(direction.y) > 1 && Math.abs(direction.x) != 1) return false;
-//                if (Math.abs(direction.x) == 1 && pieceDest != null && Math.abs(direction.y) == 1)
-//                    return true;
+                if (!(yDir == 1 || yDir == 2)) return false;
+                if (!pawn.isFirstMove() && yDir ==2) return false;
+                if (!(xDir == 0 || xDir == 1) ) return false;
+                if (xDir == 0 && yDir == 1) {
+                    if (squareDest.isFilled()) return false;
+                }
+                if (xDir == 1) {
+                    if (!squareDest.isFilled()) return false;
+                }
+                if (!possibleDirections.contains(direction)) return false;
+                if (isPathClear(from, dest)) {
+                    pawn.setFirstMove(false);
+                }
         }
-        return isPathClear(from, to);
+        return isPathClear(from, dest);
     }
 
     @Override
@@ -188,7 +211,6 @@ public class Board implements Moves{
             pieceDest.setAlive(false);
 //            Code in here to add the piece to a tally for score etc..
         } catch (NullPointerException ignored) {}
-        origin.setEmpty();
         destination.setPiece(pieceOrig);
         origin.setEmpty();
     }

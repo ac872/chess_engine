@@ -16,4 +16,12 @@ public class King extends Piece {
         return new LinkedList<>(Arrays.asList(south, north, east, west, northEast, southEast, northWest, southWest));
     }
 
+    public boolean checkMate() {
+        return false;
+    }
+
+    public Boolean isCheckMate(Point point) {
+        return false;
+    }
+
 }

@@ -2,65 +2,75 @@ package com.chess;
 
 import com.chess.board.Board;
 import com.chess.board.Square;
+import com.chess.pieces.King;
 import com.chess.pieces.Piece;
 
 import java.awt.*;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 
 public class Main {
 
-    private final int a = 1, b = 2, c = 3, d = 4, e = 5, f = 6, g = 7, h = 8;
 
     public static void main(String[] args) {
+
         Board board = new Board(8, 8);
         board.setGrid();
         board.initializePieces();
-
+        King whiteKing = (King) board.getGrid().get(new Point(5, 1)).getPiece();
+        King blackKing = (King) board.getGrid().get(new Point(5, 8)).getPiece();
         Scanner input = new Scanner(System.in);
-        System.out.println("Player One");
-        System.out.println("Enter Coordinates of piece");
-        String pieceCoordinates = input.nextLine();
-        int q = Character.getNumericValue(pieceCoordinates.charAt(0));
-        int w = Character.getNumericValue(pieceCoordinates.charAt(1));
-        Point start = new Point(q, w);
+        boolean play = true;
+        board.updateBoard();
 
-        System.out.println("Where to move?");
-        String moveCoordinates = input.nextLine();
-        int e = Character.getNumericValue(moveCoordinates.charAt(0));
-        int r = Character.getNumericValue(moveCoordinates.charAt(1));
-        Point dest = new Point(e, r);
+        do {
+            if (!whiteKing.checkMate()) {
+                System.out.println("Player One");
+                Point startW = getPoint(input);
+                Point endW = getPoint(input);
+                if (board.isValid(startW, endW)) {
+                    board.movePiece(startW, endW);
+                }
+                board.updateBoard();
 
-
-        HashMap<Point, Square> grid = board.getGrid();
-        Square from = grid.get(start);
-        Square to = grid.get(dest);
-
-        Piece piece = from.getPiece();
-        System.out.println(isPathClear(start, dest, board));
-
-//        if (start.equals(dest)) return false; // nothing in between by definition
-
+            } else {play = false;}
+            if (!blackKing.checkMate()) {
+                System.out.println("Player Two");
+                Point startW = getPoint(input);
+                Point endW = getPoint(input);
+                if (board.isValid(startW, endW)) {
+                    board.movePiece(startW, endW);
+                }
+                board.updateBoard();
+            } else {play = false;}
+        }
+        while (play);
 
 
         board.updateBoard();
     }
 
-    public static boolean isPathClear(Point start, Point dest, Board board) {
-        Point direction = new Point((int)Math.signum(dest.x - start.x), (int)Math.signum(dest.x - start.x));
-        System.out.println(direction);
+    private static Point getPoint(Scanner input) {
+        Map<String, Integer> mapping = Map.ofEntries(
+                Map.entry("a", 1),
+                Map.entry("b", 2),
+                Map.entry("c", 3),
+                Map.entry("d", 4),
+                Map.entry("e", 5),
+                Map.entry("f", 6),
+                Map.entry("g", 7),
+                Map.entry("h", 8)
+        );
 
-        Point current = new Point(start.x + direction.x, start.y + direction.y);
-        while (!current.equals(dest)) {
-            if (board.getGrid().get(current).isFilled())
-                return false;
-            current.x = current.x + direction.x;
-            current.y = current.y + direction.y;
-        }
-        return true;
+        String pieceCoordinates = input.nextLine();
+        String a = Character.toString(pieceCoordinates.charAt(0)).toLowerCase();
+        int x = mapping.get(a);
+        int y = Character.getNumericValue(pieceCoordinates.charAt(1));
+        return new Point(x, y);
     }
-
 }
 
 

@@ -1,5 +1,6 @@
 import com.chess.board.Board;
 import com.chess.board.Square;
+import com.chess.pieces.Knight;
 import com.chess.pieces.Pawn;
 import com.chess.pieces.Piece;
 import org.junit.Test;
@@ -37,7 +38,6 @@ public class BoardTest {
         for (int i = 1; i <= board.getX(); i++) {
             for (int j = 1; j <= board.getY(); j++){
                 Square square = grid.get(new Point(j, i));
-                System.out.println(square);
                 Assert.assertEquals("     ", square.getContents());
             }
         }
@@ -220,10 +220,23 @@ public class BoardTest {
 
 //        Test diagonal movement of pawn with piece in place (true)
         Board tempBoard = filledBoard;
-        Square tempSquare = tempBoard.getGrid().get(new Point(3, 3));
-        Pawn testPawn = new Pawn(1, "  p  ");
-        tempSquare.setPiece(testPawn);
-        Assert.assertTrue(tempBoard.isValid(new Point(2, 2), new Point(3, 3)));
+        Point orig = new Point(2, 2);
+        Square origSquare = tempBoard.getGrid().get(orig);
+        Piece originalPiece = origSquare.getPiece();
+        Point dest = new Point(3, 3);
+        Square destSquare = tempBoard.getGrid().get(dest);
+        Knight testKnightPiece = new Knight(0, "  N  ");
+        destSquare.setPiece(testKnightPiece);
+
+        Assert.assertTrue(tempBoard.isValid(orig, dest));
+        tempBoard.movePiece(orig, dest);
+        Piece testPiece = destSquare.getPiece();
+        Assert.assertEquals(originalPiece, testPiece);
+        Assert.assertFalse(origSquare.isFilled());
+        Assert.assertTrue(destSquare.isFilled());
+        Assert.assertEquals("  p  ", destSquare.getPiece().getName());
+        Assert.assertNull(origSquare.getPiece());
+
     }
 
     @Test
@@ -236,12 +249,6 @@ public class BoardTest {
         Assert.assertFalse(filledBoard.isPathClear(new Point(1, 2), new Point(1, 8)));
 //        Test diagonal
         Assert.assertTrue(filledBoard.isPathClear(new Point(2, 2), new Point(7, 7)));
-    }
-
-    @Test
-    public void testMovePiece() {
-        testMovePawn();
-        testMovePawnTwoSpaces();
     }
 
     @Test
@@ -272,6 +279,7 @@ public class BoardTest {
         Square origSquare = tempBoard.getGrid().get(orig);
         Square destSquare = tempBoard.getGrid().get(dest);
         Piece originalPiece = origSquare.getPiece();
+        Assert.assertTrue(tempBoard.isValid(orig, dest));
         tempBoard.movePiece(orig, dest);
         Piece testPiece = destSquare.getPiece();
 
@@ -280,9 +288,31 @@ public class BoardTest {
         Assert.assertTrue(destSquare.isFilled());
         Assert.assertEquals("  p  ", destSquare.getPiece().getName());
         Assert.assertNull(origSquare.getPiece());
-
 //        Attempt to move two spaces again
         Point newDest = new Point(2, 6);
+        Assert.assertFalse(tempBoard.isValid(dest, newDest));
+    }
+
+    @Test
+    public void testMovePawnOneSpaceThenTwo(){
+        //        Moving pawn two spaces forwards on first turn
+        Board tempBoard = filledBoard;
+        Point orig = new Point(2, 2);
+        Point dest = new Point(2, 3);
+        Square origSquare = tempBoard.getGrid().get(orig);
+        Square destSquare = tempBoard.getGrid().get(dest);
+        Piece originalPiece = origSquare.getPiece();
+        Assert.assertTrue(tempBoard.isValid(orig, dest));
+        tempBoard.movePiece(orig, dest);
+        Piece testPiece = destSquare.getPiece();
+
+        Assert.assertEquals(originalPiece, testPiece);
+        Assert.assertFalse(origSquare.isFilled());
+        Assert.assertTrue(destSquare.isFilled());
+        Assert.assertEquals("  p  ", destSquare.getPiece().getName());
+        Assert.assertNull(origSquare.getPiece());
+//        Attempt to move two spaces again
+        Point newDest = new Point(2, 5);
         Assert.assertFalse(tempBoard.isValid(dest, newDest));
     }
 }
